@@ -1,2 +1,4 @@
 # IZV
-projekt do predmetu IZV
+Projekt do predmetu IZV.
+
+Zadanie v roote.
