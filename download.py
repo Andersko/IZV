@@ -37,10 +37,35 @@ class DataDownloader:
     }
 
     def __init__(self, url="https://ehw.fit.vutbr.cz/izv/", folder="data", cache_filename="data_{}.pkl.gz"):
-        pass
+        self.url = url
+        self.folder = folder
+        self.cache_filename = cache_filename
+
+        resp = requests.get(self.url)
+        paths = re.findall('<td><button href="#" onclick="download\(\'(data/[datagisrok\-0-9]*\.zip)\'\)" class="btn btn-sm btn-primary">ZIP</button></td>', resp.text)
+
+        if os.path.isdir(folder):
+            paths_to_download = []
+
+            for path in paths:
+                if not os.path.isfile(folder + path[4:]):
+                    paths_to_download.append(path)
+
+            self.download_data(paths_to_download)
+        else:
+            if os.path.isfile(folder):
+                os.remove(folder)
+
+            os.mkdir(folder)
+            self.download_data(paths)
 
     def download_data(self, paths):
-        pass
+        for path in paths:
+            print('Downloading: ' + self.url + path)
+            with requests.get(self.url + path, stream=True) as resp:
+                with open(self.folder + path[4:], 'wb') as file:
+                    for chunk in resp.iter_content(chunk_size=128):
+                        file.write(chunk)
 
     def parse_region_data(self, region):
         pass
@@ -50,4 +75,12 @@ class DataDownloader:
 
 
 # TODO vypsat zakladni informace pri spusteni python3 download.py (ne pri importu modulu)
+
+DataDownloader = DataDownloader()
+# DataDownloader.download_data()
+
+        # try:
+        #     os.mkdir(self.folder)
+        # except FileExistsError:
+        #     pass  # File already exists
 
