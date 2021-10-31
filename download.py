@@ -6,8 +6,10 @@ import datetime
 import io
 import os
 import re
+import sys
 import requests
 import zipfile
+import gzip
 import numpy as np
 import pickle as pkl
 from bs4 import BeautifulSoup
@@ -88,7 +90,7 @@ class DataDownloader:
     def parse_region_data(self, region):
         print('Parsing region "' + region + '" (' + self.regions[region] + ')')
 
-        region_data_lists = {header: [] for header in self.headers}
+        region_data_lists = {dict_header: [] for dict_header in self.headers}
 
         # Parsing
         for path in self.paths:
@@ -165,6 +167,11 @@ class DataDownloader:
         if not regions:
             regions = list(self.regions.keys())
 
+        for region in regions:
+            if region not in list(self.regions.keys()):
+                print('Invalid region name', file=sys.stderr)
+                exit(-1)
+
         # Initialize dict(header:np.ndarray(empty)) for concatenation
         regions_data = self.init_region_data_dict()
 
@@ -184,12 +191,12 @@ class DataDownloader:
         return regions_data
 
     def save_dict_cache(self, region, region_data):
-        with open(self.folder + os.path.sep + re.sub('{}', region, self.cache_filename, 1), 'wb') as f:
+        with gzip.open(self.folder + os.path.sep + re.sub('{}', region, self.cache_filename, 1), 'wb', 6) as f:
             pkl.dump(region_data, f)
 
     def load_dict_cache(self, region):
         try:
-            with open(self.folder + os.path.sep + re.sub('{}', region, self.cache_filename, 1), 'rb') as f:
+            with gzip.open(self.folder + os.path.sep + re.sub('{}', region, self.cache_filename, 1), 'rb', 6) as f:
                 return pkl.load(f)
         except FileNotFoundError:
             return False
@@ -197,8 +204,19 @@ class DataDownloader:
 
 # TODO vypsat zakladni informace pri spusteni python3 download.py (ne pri importu modulu)
 
-DD = DataDownloader()
-DD.get_dict(['JHM', 'STC', 'PHA'])
+if __name__ == '__main__':
+    DD = DataDownloader()
+    d = DD.get_dict(['JHC', 'PLK', 'ULK'])
+
+    print('DataSet info:')
+    for header, npArr in d.items():
+        print('header/key(' + header + '), npArrType(' + str(npArr.dtype) + '), npArrSize(' + str(npArr.size) +
+              '), npArrValues(' + re.sub('\n', ' ', str(npArr)) + ')')
+
+    print('\nThere are ' + str(np.unique(d['region']).size) + ' regions in DataSet: ', end='')
+    for region_name in np.unique(d['region']):
+        print(region_name.decode('UTF-8') + ' ', end='')
+    print()
 
 # Resources
 # https://stackoverflow.com/questions/7332841/add-single-element-to-array-in-numpy (second answer)
