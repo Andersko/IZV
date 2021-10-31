@@ -9,6 +9,7 @@ import re
 import requests
 import zipfile
 import numpy as np
+import pickle as pkl
 from bs4 import BeautifulSoup
 
 
@@ -51,6 +52,7 @@ class DataDownloader:
         self.url = url
         self.folder = folder
         self.cache_filename = cache_filename
+        self.__cache = {region: None for region in list(self.regions.keys())}
 
         # http paths resolve from html
         self.paths = []
@@ -86,7 +88,7 @@ class DataDownloader:
     def parse_region_data(self, region):
         print('Parsing region "' + region + '" (' + self.regions[region] + ')')
 
-        region_data = {header: [] for header in self.headers}
+        region_data_lists = {header: [] for header in self.headers}
 
         # Parsing
         for path in self.paths:
@@ -95,33 +97,33 @@ class DataDownloader:
                     reader = csv.reader(io.TextIOWrapper(csvf, encoding='cp1250'), delimiter=';')
                     for row in reader:
                         for i in [*range(0, 2), 4, *range(6, 31), 32, 41]:
-                            region_data[self.headers[i]].append(int(row[i]))
+                            region_data_lists[self.headers[i]].append(int(row[i]))
 
                         for i in [2, 31, 33, *range(35, 41), *range(42, 45), *range(60, 62), 63]:
                             if row[i] == '':
-                                region_data[self.headers[i]].append(-1)
+                                region_data_lists[self.headers[i]].append(-1)
                             else:
-                                region_data[self.headers[i]].append(int(row[i]))
+                                region_data_lists[self.headers[i]].append(int(row[i]))
 
                         for i in [*range(45, 51)]:
                             try:
-                                region_data[self.headers[i]].append(float(re.sub('[,]', '.', row[i], 1)))
+                                region_data_lists[self.headers[i]].append(float(re.sub('[,]', '.', row[i], 1)))
                             except ValueError:
-                                region_data[self.headers[i]].append(np.nan)
+                                region_data_lists[self.headers[i]].append(np.nan)
 
                         for i in [*range(51, 60), 62]:
-                            region_data[self.headers[i]].append(row[i])
+                            region_data_lists[self.headers[i]].append(row[i])
 
                         if row[34] == '' or row[34] == 'XX':
-                            region_data[self.headers[34]].append(-1)
+                            region_data_lists[self.headers[34]].append(-1)
                         else:
-                            region_data[self.headers[34]].append(int(row[34]))
+                            region_data_lists[self.headers[34]].append(int(row[34]))
 
                         parsed_time = row[5].zfill(4)
                         if int(parsed_time[2:]) >= 60 or int(parsed_time[:-2]) >= 24 or int(parsed_time) < 0:
-                            region_data[self.headers[5]].append(-1)
+                            region_data_lists[self.headers[5]].append(-1)
                         else:
-                            region_data[self.headers[5]].append(int(row[5]))
+                            region_data_lists[self.headers[5]].append(int(row[5]))
 
                         parsed_date = row[3].split('-')
                         try:
@@ -129,75 +131,74 @@ class DataDownloader:
                             if len(parsed_date) > 3:
                                 raise IndexError
                         except ValueError or IndexError:
-                            region_data[self.headers[3]].append('')
+                            region_data_lists[self.headers[3]].append('')
                         else:
-                            region_data[self.headers[3]].append(row[3])
+                            region_data_lists[self.headers[3]].append(row[3])
+
+        # Append another list of tags to data
+        region_data_lists["region"] = [region] * len(region_data_lists[self.headers[0]])
 
         # Parsing done, create numpy arrays with correct data types from lists
-        for i in [31, *range(33, 41), *range(42, 45), 63]:
-            region_data[self.headers[i]] = np.array(region_data[self.headers[i]], np.byte)
+        region_data_arrays = self.init_region_data_dict()
+        for key, value in region_data_arrays.items():
+            region_data_arrays[key] = np.concatenate(
+                [region_data_arrays[key], np.array(region_data_lists[key], value.dtype)]
+            )
 
-        for i in [1, 4, *range(6, 12), *range(13, 16), *range(17, 31), 32]:
-            region_data[self.headers[i]] = np.array(region_data[self.headers[i]], np.ubyte)
+        return region_data_arrays
 
-        for i in [12]:
-            region_data[self.headers[i]] = np.array(region_data[self.headers[i]], np.ushort)
+    def init_region_data_dict(self):
+        data_types = [np.ulonglong, np.ubyte, np.int_, 'datetime64[D]', np.ubyte, np.short, np.ubyte, np.ubyte,
+                      np.ubyte, np.ubyte, np.ubyte, np.ubyte, np.ushort, np.ubyte, np.ubyte, np.ubyte, np.int_,
+                      np.ubyte, np.ubyte, np.ubyte, np.ubyte, np.ubyte, np.ubyte, np.ubyte, np.ubyte, np.ubyte,
+                      np.ubyte, np.ubyte, np.ubyte, np.ubyte, np.ubyte, np.byte, np.ubyte, np.byte, np.byte,
+                      np.byte, np.byte, np.byte, np.byte, np.byte, np.byte, np.int_, np.byte, np.byte, np.byte,
+                      np.single, np.single, np.single, np.single, np.single, np.single, 'U60', 'U60', 'a10',
+                      'U30', 'U40', 'a30', 'a20', 'U30', 'U30', np.int_, np.int_, 'a40', np.byte, 'a3']
 
-        for i in [5]:
-            region_data[self.headers[i]] = np.array(region_data[self.headers[i]], np.short)
+        for i in range(len(data_types)):
+            data_types[i] = np.array([], data_types[i])
 
-        for i in [2, 16, 41, *range(60, 62)]:
-            region_data[self.headers[i]] = np.array(region_data[self.headers[i]], np.int_)
-
-        for i in [0]:
-            region_data[self.headers[i]] = np.array(region_data[self.headers[i]], np.ulonglong)
-
-        for i in [*range(45, 51)]:
-            region_data[self.headers[i]] = np.array(region_data[self.headers[i]], np.single)
-
-        for i in [3]:
-            region_data[self.headers[i]] = np.array(region_data[self.headers[i]], 'datetime64[D]')
-
-        for i in [53]:
-            region_data[self.headers[i]] = np.array(region_data[self.headers[i]], 'a10')
-
-        for i in [57]:
-            region_data[self.headers[i]] = np.array(region_data[self.headers[i]], 'a20')
-
-        for i in [56]:
-            region_data[self.headers[i]] = np.array(region_data[self.headers[i]], 'a30')
-
-        for i in [54, *range(58, 60)]:
-            region_data[self.headers[i]] = np.array(region_data[self.headers[i]], 'U30')
-
-        for i in [62]:
-            region_data[self.headers[i]] = np.array(region_data[self.headers[i]], 'a40')
-
-        for i in [55]:
-            region_data[self.headers[i]] = np.array(region_data[self.headers[i]], 'U40')
-
-        for i in [*range(51, 53)]:
-            region_data[self.headers[i]] = np.array(region_data[self.headers[i]], 'U60')
-
-        # Append numpy array with region tag to data
-        region_data["region"] = np.full(region_data["p1"].size, region, 'a3')
-
-        return region_data
+        return dict(zip(self.headers + ['region'], data_types))
 
     def get_dict(self, regions=None):
         if not regions:
             regions = list(self.regions.keys())
 
-        parsed_regions_data = []
+        # Initialize dict(header:np.ndarray(empty)) for concatenation
+        regions_data = self.init_region_data_dict()
 
         for region in regions:
-            parsed_regions_data.append(self.parse_region_data(region))
+            if region_data := self.__cache[region]:
+                pass
+            elif region_data := self.load_dict_cache(region):
+                self.__cache[region] = region_data
+            else:
+                region_data = self.parse_region_data(region)
+                self.save_dict_cache(region, region_data)
+                self.__cache[region] = region_data
+
+            for key in region_data:
+                regions_data[key] = np.concatenate([regions_data[key], region_data[key]])
+
+        return regions_data
+
+    def save_dict_cache(self, region, region_data):
+        with open(self.folder + os.path.sep + re.sub('{}', region, self.cache_filename, 1), 'wb') as f:
+            pkl.dump(region_data, f)
+
+    def load_dict_cache(self, region):
+        try:
+            with open(self.folder + os.path.sep + re.sub('{}', region, self.cache_filename, 1), 'rb') as f:
+                return pkl.load(f)
+        except FileNotFoundError:
+            return False
 
 
 # TODO vypsat zakladni informace pri spusteni python3 download.py (ne pri importu modulu)
 
-DataDownloader = DataDownloader()
-DataDownloader.get_dict()
+DD = DataDownloader()
+DD.get_dict(['JHM', 'STC', 'PHA'])
 
 # Resources
 # https://stackoverflow.com/questions/7332841/add-single-element-to-array-in-numpy (second answer)
