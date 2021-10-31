@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+# Resources
+# https://stackoverflow.com/questions/7332841/add-single-element-to-array-in-numpy (second answer)
+
 import csv
 import datetime
 import io
@@ -13,10 +16,6 @@ import gzip
 import numpy as np
 import pickle as pkl
 from bs4 import BeautifulSoup
-
-
-# Kromě vestavěných knihoven (os, sys, re, requests …) byste si měli vystačit s: gzip, pickle, csv, zipfile, numpy,
-# matplotlib, BeautifulSoup. Další knihovny je možné použít po schválení opravujícím (např ve fóru WIS).
 
 
 class DataDownloader:
@@ -202,8 +201,6 @@ class DataDownloader:
             return False
 
 
-# TODO vypsat zakladni informace pri spusteni python3 download.py (ne pri importu modulu)
-
 if __name__ == '__main__':
     DD = DataDownloader()
     d = DD.get_dict(['JHC', 'PLK', 'ULK'])
@@ -217,6 +214,3 @@ if __name__ == '__main__':
     for region_name in np.unique(d['region']):
         print(region_name.decode('UTF-8') + ' ', end='')
     print()
-
-# Resources
-# https://stackoverflow.com/questions/7332841/add-single-element-to-array-in-numpy (second answer)
