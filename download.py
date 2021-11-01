@@ -1,4 +1,13 @@
-#!/usr/bin/env python3
+""" Script containing one class DataDownloader for downloading and parsing data from Czech republic police department
+website.
+
+Can be imported as module, or run as main script.
+If run as main script, downloads and parses data from 'JHC', 'PLK' and 'ULK' regions and prints basic information about
+data to stdout.
+Out of non-built-in libraries this script uses numpy, BeautifulSoup and requests
+"""
+
+# !/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # Resources
@@ -19,11 +28,22 @@ from bs4 import BeautifulSoup
 
 
 class DataDownloader:
-    """ TODO: dokumentacni retezce
+    """Class for downloading and parsing data from police website
 
-    Attributes:
-        headers    Nazvy hlavicek jednotlivych CSV souboru, tyto nazvy nemente!
-        regions     Dictionary s nazvy kraju : nazev csv souboru
+    Attributes
+        headers : list of str
+            CSV headers names.
+        regions : dict of (str, str)
+            Region name : CSV number.
+        url : str
+            Address for data download.
+        folder : str
+            Path to folder, which script will be using for needed temporary data, created if doesn't exists.
+        cache_filename : str
+            Specifies the name, for temporary data of individual regions.
+            Name have to contain '{}' as substring, which will be replaced with region tag.
+        __cache : dict of (str, dict)
+            Holds cache data as 'region tag : region data'.
     """
 
     headers = ["p1", "p36", "p37", "p2a", "weekday(p2a)", "p2b", "p6", "p7", "p8", "p9", "p10", "p11", "p12", "p13a",
@@ -49,7 +69,21 @@ class DataDownloader:
         "KVK": "19",
     }
 
-    def __init__(self, url="https://ehw.fit.vutbr.cz/izv/", folder="data", cache_filename="data_{}.pkl.gz"):
+    def __init__(self,
+                 url: str = "https://ehw.fit.vutbr.cz/izv/",
+                 folder: str = "data",
+                 cache_filename: str = "data_{}.pkl.gz"):
+        """
+        Parameters:
+            url : str
+                Address for data download.
+            folder : str
+                Path to folder, which script will be using for needed temporary data, created if doesn't exists.
+            cache_filename : str
+                Specifies the name, for temporary data of individual regions.
+                Name have to contain '{}' as substring, which will be replaced with region tag.
+        """
+
         self.url = url
         self.folder = folder
         self.cache_filename = cache_filename
@@ -78,7 +112,16 @@ class DataDownloader:
             os.mkdir(folder)
             self.download_data(self.paths)
 
-    def download_data(self, paths):
+    def download_data(self, paths: list):
+        """Downloads data from provided paths.
+
+        This method should be prepended with '__' and made private, but it's not because of school assignment
+        reasons.
+
+        Parameters:
+            paths : list of str
+                Strings representing paths to files on police department url.
+        """
         for path in paths:
             print('Downloading "' + self.url + path + '"')
             with requests.get(self.url + path, stream=True) as resp:
@@ -86,7 +129,18 @@ class DataDownloader:
                     for chunk in resp.iter_content(chunk_size=128):
                         file.write(chunk)
 
-    def parse_region_data(self, region):
+    def parse_region_data(self, region: str):
+        """From all downloaded files in folder loads and parses data for specified region.
+
+        Parameters:
+            region : str
+                Region tag.
+                One of the keys from class attribute dictionary regions.
+
+        Returns:
+            dict
+                Dictionary with parsed data for set region.
+        """
         print('Parsing region "' + region + '" (' + self.regions[region] + ')')
 
         region_data_lists = {dict_header: [] for dict_header in self.headers}
@@ -149,6 +203,13 @@ class DataDownloader:
         return region_data_arrays
 
     def init_region_data_dict(self):
+        """Creates dictionary as 'header of SCV : empty Numpy Array' with correct numpy data types, needed for each
+        region parsed data.
+
+        Returns:
+            dict
+                'header of SCV : empty Numpy Array'
+        """
         data_types = [np.ulonglong, np.ubyte, np.int_, 'datetime64[D]', np.ubyte, np.short, np.ubyte, np.ubyte,
                       np.ubyte, np.ubyte, np.ubyte, np.ubyte, np.ushort, np.ubyte, np.ubyte, np.ubyte, np.int_,
                       np.ubyte, np.ubyte, np.ubyte, np.ubyte, np.ubyte, np.ubyte, np.ubyte, np.ubyte, np.ubyte,
@@ -162,7 +223,21 @@ class DataDownloader:
 
         return dict(zip(self.headers + ['region'], data_types))
 
-    def get_dict(self, regions=None):
+    def get_dict(self, regions: list = None):
+        """Gets parsed data for provided regions, joined in one dictionary
+
+        Parameters:
+            regions : list of str, optional, default: None
+                List containing unique strings (keys from class attribute dictionary regions), defining, for which
+                regions are data parsed.
+
+                If any of strings isn't key from class attribute dictionary regions, method halts the script run.
+                If None, all the regions are parsed.
+
+        Returns:
+            dict
+                Joined dictionaries returned by calling parse_region_data(region) method.
+        """
         if not regions:
             regions = list(self.regions.keys())
 
@@ -189,11 +264,30 @@ class DataDownloader:
 
         return regions_data
 
-    def save_dict_cache(self, region, region_data):
+    def save_dict_cache(self, region: str, region_data: dict):
+        """Caches dictionary to file with pickle gzip format. File is named as cache_filename with replaced '{}' for
+        region tag
+
+        Parameters:
+            region : str
+                Region tag used for file naming.
+            region_data : dict of numpy.ndarray
+                Cached data.
+        """
         with gzip.open(self.folder + os.path.sep + re.sub('{}', region, self.cache_filename, 1), 'wb', 6) as f:
             pkl.dump(region_data, f)
 
-    def load_dict_cache(self, region):
+    def load_dict_cache(self, region: str):
+        """Loads cached dictionary from pickle gzip format file for corresponding region
+
+        Parameters:
+            region : str
+                Region tag determining for which region load data.
+
+        Returns:
+            dict
+                Loaded data in dictionary from memory.
+        """
         try:
             with gzip.open(self.folder + os.path.sep + re.sub('{}', region, self.cache_filename, 1), 'rb', 6) as f:
                 return pkl.load(f)
