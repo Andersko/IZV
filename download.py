@@ -31,18 +31,18 @@ class DataDownloader:
     """Class for downloading and parsing data from police website
 
     Attributes
-        headers : list of str
+        headers : list of str [Class Attribute]
             CSV headers names.
-        regions : dict of (str, str)
+        regions : dict of (str, str) [Class Attribute]
             Region name : CSV number.
-        url : str
+        url : str [Instance Attribute]
             Address for data download.
-        folder : str
+        folder : str [Instance Attribute]
             Path to folder, which script will be using for needed temporary data, created if doesn't exists.
-        cache_filename : str
+        cache_filename : str [Instance Attribute]
             Specifies the name, for temporary data of individual regions.
             Name have to contain '{}' as substring, which will be replaced with region tag.
-        __cache : dict of (str, dict)
+        __cache : dict of (str, dict) [Instance Attribute]
             Holds cache data as 'region tag : region data'.
     """
 
@@ -141,8 +141,6 @@ class DataDownloader:
             dict
                 Dictionary with parsed data for set region.
         """
-        print('Parsing region "' + region + '" (' + self.regions[region] + ')')
-
         region_data_lists = {dict_header: [] for dict_header in self.headers}
 
         # Parsing
@@ -190,7 +188,7 @@ class DataDownloader:
                         else:
                             region_data_lists[self.headers[3]].append(row[3])
 
-        # Append another list of tags to data
+        # Append one more list of tags to data
         region_data_lists["region"] = [region] * len(region_data_lists[self.headers[0]])
 
         # Parsing done, create numpy arrays with correct data types from lists
@@ -203,12 +201,12 @@ class DataDownloader:
         return region_data_arrays
 
     def init_region_data_dict(self):
-        """Creates dictionary as 'header of SCV : empty Numpy Array' with correct numpy data types, needed for each
+        """Creates dictionary as 'header of CSV : empty Numpy Array' with correct numpy data types, needed for each
         region parsed data.
 
         Returns:
             dict
-                'header of SCV : empty Numpy Array'
+                'header of CSV : empty Numpy Array'
         """
         data_types = [np.ulonglong, np.ubyte, np.int_, 'datetime64[D]', np.ubyte, np.short, np.ubyte, np.ubyte,
                       np.ubyte, np.ubyte, np.ubyte, np.ubyte, np.ushort, np.ubyte, np.ubyte, np.ubyte, np.int_,
@@ -268,17 +266,21 @@ class DataDownloader:
         """Caches dictionary to file with pickle gzip format. File is named as cache_filename with replaced '{}' for
         region tag
 
+        compresslevel = 1
+
         Parameters:
             region : str
                 Region tag used for file naming.
             region_data : dict of numpy.ndarray
                 Cached data.
         """
-        with gzip.open(self.folder + os.path.sep + re.sub('{}', region, self.cache_filename, 1), 'wb', 6) as f:
+        with gzip.open(self.folder + os.path.sep + re.sub('{}', region, self.cache_filename, 1), 'wb', 1) as f:
             pkl.dump(region_data, f)
 
     def load_dict_cache(self, region: str):
         """Loads cached dictionary from pickle gzip format file for corresponding region
+
+        compresslevel = 1
 
         Parameters:
             region : str
@@ -289,7 +291,7 @@ class DataDownloader:
                 Loaded data in dictionary from memory.
         """
         try:
-            with gzip.open(self.folder + os.path.sep + re.sub('{}', region, self.cache_filename, 1), 'rb', 6) as f:
+            with gzip.open(self.folder + os.path.sep + re.sub('{}', region, self.cache_filename, 1), 'rb', 1) as f:
                 return pkl.load(f)
         except FileNotFoundError:
             return False
