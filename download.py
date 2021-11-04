@@ -188,10 +188,11 @@ class DataDownloader:
                         else:
                             region_data_lists[self.headers[3]].append(row[3])
 
+        # Parsing done
         # Append one more list of tags to data
         region_data_lists["region"] = [region] * len(region_data_lists[self.headers[0]])
 
-        # Parsing done, create numpy arrays with correct data types from lists
+        # Create numpy arrays with correct data types from lists
         region_data_arrays = self.init_region_data_dict()
         for key, value in region_data_arrays.items():
             region_data_arrays[key] = np.concatenate(
@@ -259,6 +260,12 @@ class DataDownloader:
 
             for key in region_data:
                 regions_data[key] = np.concatenate([regions_data[key], region_data[key]])
+
+        # Remove duplicates
+        unique, counts = np.unique(regions_data[self.headers[0]], return_counts=True)
+        indices = np.argwhere(np.subtract(counts, np.ones_like(counts)))
+        for header in self.headers + ["region"]:
+            regions_data[header] = np.delete(regions_data[header], list(indices))
 
         return regions_data
 
