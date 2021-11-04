@@ -1,3 +1,6 @@
+# !/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 """ Script containing one class DataDownloader for downloading and parsing data from Czech republic police department
 website.
 
@@ -6,9 +9,6 @@ If run as main script, downloads and parses data from 'JHC', 'PLK' and 'ULK' reg
 data to stdout.
 Out of non-built-in libraries this script uses numpy, BeautifulSoup and requests
 """
-
-# !/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 # Resources
 # https://stackoverflow.com/questions/7332841/add-single-element-to-array-in-numpy (second answer)
