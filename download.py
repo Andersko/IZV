@@ -138,7 +138,7 @@ class DataDownloader:
                 One of the keys from class attribute dictionary regions.
 
         Returns:
-            dict
+            dict of numpy.ndarray
                 Dictionary with parsed data for set region.
         """
         region_data_lists = {dict_header: [] for dict_header in self.headers}
@@ -206,7 +206,7 @@ class DataDownloader:
         region parsed data.
 
         Returns:
-            dict
+            dict of numpy.ndarray
                 'header of CSV : empty Numpy Array'
         """
         data_types = [np.ulonglong, np.ubyte, np.int_, 'datetime64[D]', np.ubyte, np.short, np.ubyte, np.ubyte,
@@ -234,8 +234,9 @@ class DataDownloader:
                 If None, all the regions are parsed.
 
         Returns:
-            dict
-                Joined dictionaries returned by calling parse_region_data(region) method.
+            dict of numpy.ndarray
+                Joined dictionaries returned by calling parse_region_data(region) method by scheme:
+                'dictN_header (always same) : concatenated numpy.ndarray(s)'.
         """
         if not regions:
             regions = list(self.regions.keys())
@@ -294,7 +295,7 @@ class DataDownloader:
                 Region tag determining for which region load data.
 
         Returns:
-            dict
+            dict of numpy.ndarray
                 Loaded data in dictionary from memory.
         """
         try:

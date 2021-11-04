@@ -1,12 +1,40 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+"""Script containing single function that makes 2 plots visualizing accident count in regions based on column about
+driving priority changes on road (p24). Plots:
+    1. linear, logarithmic,
+    2. relative, percentage.
+
+Can be imported as module, or run as main script.
+If run as main script, takes two optional arguments:
+    --fig_location, path where to save file, default=None,
+    --show-figure, tells if show figure in separate window, default=False.
+
+Out of non-built-in libraries this script uses matplotlib.pyplot, matplotlib.colors.LogNorm, numpy
+"""
+
 import os
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 
-def plot_stat(data_source, fig_location=None, show_figure=False):
+
+def plot_stat(data_source: dict, fig_location: str = None, show_figure: bool = False):
+    """Makes 2 plots visualizing accident count in regions based on column about driving priority changes on road
+    (p24). Saves the graph as png and/or shows graph in separate window. Plots:
+        1. linear, logarithmic,
+        2. relative, percentage.
+
+    Parameters:
+        data_source : dict of numpy.ndarray
+            Data from police department sites made using DataDownloader class.
+        fig_location : str
+            Path like parameter. In addition to file name, can contain folders, subfolder, or represent absolute path.
+            If some of folder in paths does not exists, it's created.
+        show_figure : bool
+            If true, figure is shown in separate window.
+    """
     y_labels = ["žádná",
                 "SS na přerušovanou žlutou",
                 "SS mimo provoz",
@@ -66,10 +94,6 @@ def plot_stat(data_source, fig_location=None, show_figure=False):
     cbar1.ax.set_ylabel("Počet nehod [log]", rotation=-90, va="bottom")
     cbar2.ax.set_ylabel("Podíl nehod pro danou příčinu [%]", rotation=-90, va="bottom")
     cbar1.ax.minorticks_off()
-
-    # Without this line
-    # UserWarning: Warning: converting a masked element to nan.
-    ax1.xaxis_date()
 
     fig.tight_layout()
 
