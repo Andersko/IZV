@@ -101,7 +101,7 @@ class DataDownloader:
             paths = []
 
             for path in self.paths:
-                if not os.path.isfile(folder + path[4:]):
+                if not os.path.isfile(folder + os.path.sep + path[5:]):
                     paths.append(path)
 
             self.download_data(paths)
@@ -120,12 +120,12 @@ class DataDownloader:
 
         Parameters:
             paths : list of str
-                Strings representing paths to files on police department url.
+                Strings representing paths to files on police department server.
         """
         for path in paths:
             print('Downloading "' + self.url + path + '"')
             with requests.get(self.url + path, stream=True) as resp:
-                with open(self.folder + path[4:], 'wb') as file:
+                with open(self.folder + os.path.sep + path[5:], 'wb') as file:
                     for chunk in resp.iter_content(chunk_size=128):
                         file.write(chunk)
 
@@ -145,7 +145,7 @@ class DataDownloader:
 
         # Parsing
         for path in self.paths:
-            with zipfile.ZipFile(self.folder + path[4:], 'r') as zipf:
+            with zipfile.ZipFile(self.folder + os.path.sep + path[5:], 'r') as zipf:
                 with zipf.open(self.regions[region] + '.csv', 'r') as csvf:
                     reader = csv.reader(io.TextIOWrapper(csvf, encoding='cp1250'), delimiter=';')
                     for row in reader:
