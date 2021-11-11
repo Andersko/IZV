@@ -11,7 +11,7 @@ Out of non-built-in libraries this script uses numpy, BeautifulSoup and requests
 """
 
 # Resources
-# https://stackoverflow.com/questions/7332841/add-single-element-to-array-in-numpy (second answer)
+# https://stackoverflow.com/questions/7332841/add-single-element-to-array-in-numpy (answer from Jurgen Strydom)
 
 import csv
 import datetime
