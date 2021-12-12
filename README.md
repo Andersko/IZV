@@ -1,4 +1,5 @@
 # IZV
 Projekt do predmetu IZV.
 
-Zadanie v roote.
+1. časť 18/20b
+2. časť (nedokončená)
