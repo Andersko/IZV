@@ -109,8 +109,55 @@ def plot_geo(gdf: geopandas.GeoDataFrame, fig_location: str = None, show_figure:
 
 
 def plot_cluster(gdf: geopandas.GeoDataFrame, fig_location: str = None, show_figure: bool = False):
-    """ Vykresleni grafu s lokalitou vsech nehod v kraji shlukovanych do clusteru """
-    pass
+    """
+    Plot map visualizing accidents positions for first class roads for VYS region grouping them into clusters.
+
+    Parameters:
+        gdf : pd.geoDataFrame
+            Data.
+        fig_location : str
+            Path to save the figure, if None, figure is not saved.
+        show_figure : bool
+            If true, figure window is shown.
+    """
+
+    gdf = gdf[(gdf["region"] == "VYS") & (gdf["p36"] == 1)]
+    gdf = gdf.to_crs("EPSG:3857")
+
+    coords = np.dstack([gdf.geometry.x, gdf.geometry.y]).reshape(-1, 2)
+    # Skúšal som iba toto, vyšlo mi to na prvý pokus celkom správne, aj algoritmus ale aj počet clusterov 25 je jediný
+    # čo som skúsil, vychádzalo mi to viac-menej pekne keď som si na druhý graf na porovnanie dal zobraziť nehody vo VYS
+    # na c. 1. triedy všetky v datasete a nastavil si nízku alphu 0.1 tak som to porovnával okom a prišlo mi že to
+    # zhlukovanie sa mi spravilo pekne, zhluky s nižšou farbou boli v porovnávanom grafe alfou skoro úplne prázdne,
+    # ešte som si to potom skúsil pustiť pre JHM a porovnal so vzorovým grafom zo zadania a celkom sa podobali až na pár
+    # menších rozdielov
+    model = sklearn.cluster.MiniBatchKMeans(n_clusters=25)
+    db = model.fit(coords)
+    gdf["cluster"] = db.labels_
+    gdf["cnt"] = gdf.groupby("cluster")["cluster"].transform("count")
+
+    fig, ax = plt.subplots(figsize=(11, 12))
+
+    gdf.plot(ax=ax, column="cnt", legend=True, markersize=2)
+    ctx.add_basemap(ax, crs=gdf.crs.to_string(), source=ctx.providers.CartoDB.Voyager)
+    ax.axis("off")
+
+    plt.tight_layout()
+
+    if fig_location:
+        path = ''
+        folders = fig_location.split(os.path.sep)[:-1]
+
+        for folder in folders:
+            if not os.path.isdir(path := os.path.join(path, folder)):
+                os.mkdir(path)
+
+        plt.savefig(fig_location)
+
+    if show_figure:
+        plt.show()
+
+    plt.close(fig)
 
 
 if __name__ == "__main__":
