@@ -6,8 +6,9 @@ import pandas as pd
 import geopandas
 import matplotlib.pyplot as plt
 import contextily as ctx
-import sklearn.cluster
 import numpy as np
+import sklearn.cluster
+import sklearn.mixture
 
 # muzete pridat vlastni knihovny
 
@@ -54,13 +55,14 @@ def plot_geo(gdf: geopandas.GeoDataFrame, fig_location: str = None, show_figure:
         show_figure : bool
             If true, figure window is shown.
     """
+
     gdf = gdf[gdf["region"] == "VYS"]
-    # Turn off warning
+    # Turn off warning for chained assignment
     pd.options.mode.chained_assignment = None
     gdf["p2a"] = pd.to_datetime(gdf["p2a"])
     gdf = gdf.to_crs("EPSG:3857")
 
-    fig, axs = plt.subplots(3, 2, figsize=(15, 7))
+    fig, axs = plt.subplots(3, 2, figsize=(11, 12))
     axs = axs.flatten()
 
     dt2018 = pd.to_datetime("2018-01-01 00:00:00")
@@ -70,23 +72,23 @@ def plot_geo(gdf: geopandas.GeoDataFrame, fig_location: str = None, show_figure:
 
     # Plot accidents into map
     gdf[(gdf["p36"] == 0) & (gdf["p2a"] >= dt2018) & (gdf["p2a"] < dt2019)].plot(
-        ax=axs[0], markersize=1, color="tab:green", label="nehody VYS kraj: dialnice (2018)")
+        ax=axs[0], markersize=1, color="tab:green", label="nehody VYS kraj: dialnice (2018)", alpha=0.5)
     gdf[(gdf["p36"] == 1) & (gdf["p2a"] >= dt2018) & (gdf["p2a"] < dt2019)].plot(
-        ax=axs[1], markersize=1, color="tab:red", label="nehody VYS kraj: cesty prvej triedy (2018)")
+        ax=axs[1], markersize=1, color="tab:red", label="nehody VYS kraj: cesty prvej triedy (2018)", alpha=0.5)
     gdf[(gdf["p36"] == 0) & (gdf["p2a"] >= dt2019) & (gdf["p2a"] < dt2020)].plot(
-        ax=axs[2], markersize=1, color="tab:green", label="nehody VYS kraj: dialnice (2019)")
+        ax=axs[2], markersize=1, color="tab:green", label="nehody VYS kraj: dialnice (2019)", alpha=0.5)
     gdf[(gdf["p36"] == 1) & (gdf["p2a"] >= dt2019) & (gdf["p2a"] < dt2020)].plot(
-        ax=axs[3], markersize=1, color="tab:red", label="nehody VYS kraj: cesty prvej triedy (2019)")
+        ax=axs[3], markersize=1, color="tab:red", label="nehody VYS kraj: cesty prvej triedy (2019)", alpha=0.5)
     gdf[(gdf["p36"] == 0) & (gdf["p2a"] >= dt2020) & (gdf["p2a"] < dt2021)].plot(
-        ax=axs[4], markersize=1, color="tab:green", label="nehody VYS kraj: dialnice (2020)")
+        ax=axs[4], markersize=1, color="tab:green", label="nehody VYS kraj: dialnice (2020)", alpha=0.5)
     gdf[(gdf["p36"] == 1) & (gdf["p2a"] >= dt2020) & (gdf["p2a"] < dt2021)].plot(
-        ax=axs[5], markersize=1, color="tab:red", label="nehody VYS kraj: cesty prvej triedy (2020)")
+        ax=axs[5], markersize=1, color="tab:red", label="nehody VYS kraj: cesty prvej triedy (2020)", alpha=0.5)
 
     # Set basemap and styling
     for ax in axs:
-        ctx.add_basemap(ax, crs=gdf.crs.to_string(), source=ctx.providers.CartoDB.Voyager, alpha=0.9)
+        ctx.add_basemap(ax, crs=gdf.crs.to_string(), source=ctx.providers.CartoDB.Voyager)
         ax.axis("off")
-        ax.legend(loc="upper right", fontsize=6)
+        ax.legend(loc="upper right", fontsize=8)
 
     plt.tight_layout()
 
@@ -116,6 +118,7 @@ if __name__ == "__main__":
     gdf = make_geo(pd.read_pickle("ignore_data/3/accidents.pkl.gz"))
 
     print("plot_geo...")
-    plot_geo(gdf, "geo1", True)
+    plot_geo(gdf, "geo.png", True)
 
-    # plot_cluster(gdf, "geo2.png", True)
+    print("plot_cluster...")
+    plot_cluster(gdf, "cluster.png", True)
