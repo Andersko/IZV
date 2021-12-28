@@ -1,4 +1,8 @@
-data/
 .idea/
-
 ignore_data/
+data/
+
+accidents.pkl.gz
+geo.png
+cluster.png
+doc.pdf
