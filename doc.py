@@ -57,7 +57,7 @@ def make_doc(df: pd.DataFrame):
     ax.tick_params(axis='both', width=0)
     plt.yticks(fontsize=8)
     plt.tight_layout()
-    plt.savefig('doc1.png')
+    plt.savefig('doc.pdf')
     plt.close(fig)
 
     # Keep only accidents that took life
