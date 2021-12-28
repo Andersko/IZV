@@ -71,9 +71,12 @@ def make_doc(df: pd.DataFrame):
 
     # Count by accidents cause (p12)
     df1['cnt'] = 0
+    df1['pct'] = 0
     df1 = df1.groupby(['p12']).agg({'cnt': 'count'})
     df1.sort_values(by=['cnt'], inplace=True, ascending=False)
     df1.reset_index(level=0, inplace=True)
+    sum = df1['cnt'].sum()
+    df1['pct'] = round(df1['cnt'] / sum * 100, 1)
 
     # Replace count labels and rename columns
     df1['p12'] = df1['p12'].replace({
@@ -95,7 +98,7 @@ def make_doc(df: pd.DataFrame):
         515: "nehoda při provádění služebního zákroku (pronásledování pachatele atd.)",
         516: "jiný druh nesprávného způsobu jízdy"
     })
-    df1.rename(columns={"p12": "Nesprávny způsob jízdy (detailný důvod)", "cnt": "počet"}, inplace=True)
+    df1.rename(columns={"p12": "Nesprávny způsob jízdy (detailný důvod)", "cnt": "počet", "pct": "%"}, inplace=True)
 
     # Print table
     print("----------------------------------------")
