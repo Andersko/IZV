@@ -98,7 +98,7 @@ def make_doc(df: pd.DataFrame):
         515: "nehoda při provádění služebního zákroku (pronásledování pachatele atd.)",
         516: "jiný druh nesprávného způsobu jízdy"
     })
-    df1.rename(columns={"p12": "Nesprávny způsob jízdy (detailný důvod)", "cnt": "počet", "pct": "%"}, inplace=True)
+    df1.rename(columns={"p12": "Nesprávny způsob jízdy (detailný důvod)", "cnt": "počet smrtí", "pct": "%"}, inplace=True)
 
     # Print table
     print("----------------------------------------")
