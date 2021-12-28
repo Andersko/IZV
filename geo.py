@@ -62,7 +62,7 @@ def plot_geo(gdf: geopandas.GeoDataFrame, fig_location: str = None, show_figure:
     gdf["p2a"] = pd.to_datetime(gdf["p2a"])
     gdf = gdf.to_crs("EPSG:3857")
 
-    fig, axs = plt.subplots(3, 2, figsize=(11, 12))
+    fig, axs = plt.subplots(3, 2, figsize=(9, 7))
     axs = axs.flatten()
 
     dt2018 = pd.to_datetime("2018-01-01 00:00:00")
@@ -136,7 +136,7 @@ def plot_cluster(gdf: geopandas.GeoDataFrame, fig_location: str = None, show_fig
     gdf["cluster"] = db.labels_
     gdf["cnt"] = gdf.groupby("cluster")["cluster"].transform("count")
 
-    fig, ax = plt.subplots(figsize=(11, 12))
+    fig, ax = plt.subplots(figsize=(8, 7))
 
     gdf.plot(ax=ax, column="cnt", legend=True, markersize=2)
     ctx.add_basemap(ax, crs=gdf.crs.to_string(), source=ctx.providers.CartoDB.Voyager)
@@ -162,7 +162,7 @@ def plot_cluster(gdf: geopandas.GeoDataFrame, fig_location: str = None, show_fig
 
 if __name__ == "__main__":
     print("reading pickle and creating GeoDataFrame...")
-    gdf = make_geo(pd.read_pickle("ignore_data/3/accidents.pkl.gz"))
+    gdf = make_geo(pd.read_pickle("accidents.pkl.gz"))
 
     print("plot_geo...")
     plot_geo(gdf, "geo.png", True)
