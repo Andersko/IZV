@@ -51,7 +51,7 @@ def make_doc(df: pd.DataFrame):
     # Style and save plot
     fig, ax = plt.subplots(figsize=(7, 2))
     sns.barplot(ax=ax, data=df1, x='cnt', y='p12', palette='Blues_d', orient='h')
-    ax.set_title('Celkové počty nehôd, podľa ich hlavnej príčiny', fontweight='bold')
+    ax.set_title('Celkové počty smrteľných nehôd, podľa ich hlavnej príčiny', fontweight='bold')
     ax.set(ylabel='', xlabel='')
     ax.set(xlim=(0, 50000))
     ax.tick_params(axis='both', width=0)
