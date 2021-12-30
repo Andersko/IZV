@@ -10,14 +10,6 @@ import numpy as np
 import sklearn.cluster
 import sklearn.mixture
 
-# muzete pridat vlastni knihovny
-
-# Primárně se počítá, že budete pracovat s následujícími externími knihovnami: numpy,
-# pandas, seaborn, matplotlib, scipy, scikit-learn, geopandas, contextily a použijete techniky
-# představené na přednáškách. Můžete použít libovolné knihovny zmíněné na přednáškách,
-# další pouze po schválení.  Nyní nejste omezeni, zda musíte používat Seaborn, Matplotlib
-# a podobně. Volba knihoven a nástrojů je jen na vás.
-
 
 def make_geo(df: pd.DataFrame) -> geopandas.GeoDataFrame:
     """

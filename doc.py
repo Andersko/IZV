@@ -57,7 +57,7 @@ def make_doc(df: pd.DataFrame):
     ax.tick_params(axis='both', width=0)
     plt.yticks(fontsize=8)
     plt.tight_layout()
-    plt.savefig('doc.pdf')
+    plt.savefig('fig.pdf')
     plt.close(fig)
 
     # Keep only accidents that took life
@@ -98,7 +98,8 @@ def make_doc(df: pd.DataFrame):
         515: "nehoda při provádění služebního zákroku (pronásledování pachatele atd.)",
         516: "jiný druh nesprávného způsobu jízdy"
     })
-    df1.rename(columns={"p12": "Nesprávny způsob jízdy (detailný důvod)", "cnt": "počet smrtí", "pct": "%"}, inplace=True)
+    df1.rename(columns={"p12": "Nesprávny způsob jízdy (detailný důvod)", "cnt": "počet smrtí", "pct": "%"},
+               inplace=True)
 
     # Print table
     print("----------------------------------------")
